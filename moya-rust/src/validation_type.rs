@@ -12,6 +12,7 @@ pub enum ValidationType {
   // Validate only the given status codes.
   CustomCodes(Vec<i16>),
 
+  NotFound(i16),
 }
 
 impl ValidationType {
@@ -21,6 +22,7 @@ impl ValidationType {
       ValidationType::SuccessAndRedirectCodes => (200..400).collect(),
       ValidationType::CustomCodes(codes) => codes.to_vec(),
       ValidationType::None => Vec::new(),
+      ValidationType::NotFound(code) => Vec::new(),
     }
   }
 }

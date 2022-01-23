@@ -11,7 +11,7 @@ type Data = bytes::BytesMut;
 
 
 pub enum EndpointSampleResponse {
-    NetworkResponse(u16,Data),
+    NetworkResponse(u16, Data),
     Response(http::response::Response<()>, Data),
     NetworkError(Box<dyn Error>),
 }

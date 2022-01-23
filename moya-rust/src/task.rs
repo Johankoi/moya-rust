@@ -11,9 +11,9 @@ pub enum Task {
     RequestData(bytes::Bytes),
     RequestJSONEncodable(String),
     RequestParameters {parameters: HashMap<String, ()>, encoding: ParameterEncoding},
-    RequestCompositeData {body_data: bytes::Bytes, url_arameters: HashMap<String, ()>},
-    RequestCompositeParameters {body_parameters: HashMap<String, ()>, body_encoding: ParameterEncoding, 
-        url_arameters: HashMap<String, ()>},
+    RequestCompositeData {body_data: bytes::Bytes, url_parameters: HashMap<String, ()>},
+    RequestCompositeParameters {body_parameters: HashMap<String, ()>, body_encoding: ParameterEncoding,
+        url_parameters: HashMap<String, ()>},
     UploadFile(Url),
 }
 
