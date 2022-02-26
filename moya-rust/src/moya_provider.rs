@@ -11,7 +11,7 @@ type Progress = f32;
 type Session = reqwest::Client;
 
 /// Closure to be executed when a request has completed.
-type Completion = (dyn for<'r> Fn(Result<Response, MoyaError<'r>>) + 'static);
+type Completion = (dyn for<'r> Fn(Result<Response, MoyaError>) + 'static);
 
 type EndpointClosure<T> = dyn Fn(T) -> Endpoint;
 type Request = http::request::Request<()>;

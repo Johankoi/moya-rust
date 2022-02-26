@@ -15,15 +15,15 @@ pub enum MoyaError<'a> {
 }
 
 impl<'a> MoyaError<'a> {
-    pub fn respones(&self) -> Option<&Response> {
-        match self {
+    pub fn response(&self) -> Option<&Response> {
+        match *self {
             MoyaError::ImageMapping(resp) => Some(resp),  
             MoyaError::JsonMapping(resp) => Some(resp), 
             MoyaError::StringMapping(resp) => Some(resp),
             MoyaError::ObjectMapping(_, resp) => Some(resp), 
             MoyaError::EncodableMapping(_) => None, 
             MoyaError::StatusCode(resp) => Some(resp), 
-            MoyaError::Underlying(_, resp) => *resp,
+            MoyaError::Underlying(_, resp) => Some(resp.unwrap()),
             MoyaError::RequestMapping(_) => None, 
             MoyaError::ParameterEncoding(_) => None, 
         }
@@ -42,7 +42,7 @@ impl<'a> MoyaError<'a> {
             MoyaError::ParameterEncoding(e) => Some(e),
         }
     }
-    pub fn __description(&self) -> &str {
+    pub fn moya_error_description(&self) -> &str {
         match self {
             MoyaError::ImageMapping(_) => "Failed to map data to an Image.", 
             MoyaError::JsonMapping(_) => "Failed to map data to JSON.", 
@@ -59,6 +59,6 @@ impl<'a> MoyaError<'a> {
 
 impl fmt::Display for MoyaError<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        return write!(f, "{}", self.__description());
+        return write!(f, "{}", self.moya_error_description());
     }
 }

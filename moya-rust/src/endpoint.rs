@@ -4,11 +4,9 @@ use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
 use url::{Url, Host, Position};
 use crate::moya_error::MoyaError;
-use std::ptr::null;
 use super::task::Task;
-
+use reqwest::RequestBuilder;
 type Data = bytes::BytesMut;
-
 
 pub enum EndpointSampleResponse {
     NetworkResponse(u16, Data),
@@ -21,7 +19,7 @@ pub struct Endpoint {
     sample_response_closure: fn() -> EndpointSampleResponse,
     method: http::Method,
     task: Task,
-    http_header_fields: HashMap<String, String>,
+    http_header_fields: Option<HashMap<String, String>>,
 }
 
 impl Endpoint {
@@ -30,7 +28,7 @@ impl Endpoint {
         sample_response_closure: fn() -> EndpointSampleResponse,
         method: http::Method,
         task: Task,
-        http_header_fields: HashMap<String, String>,
+        http_header_fields: Option<HashMap<String, String>>,
     ) -> Self {
         Endpoint {
             url,
@@ -41,58 +39,47 @@ impl Endpoint {
         }
     }
 
-    // // #[inline]
-    pub fn get_task(&self) -> &Task {
-        &self.task
-    }
-    pub fn http_header_fields_mut(&mut self) -> &mut HashMap<String, String> {
-        &mut self.http_header_fields
-    }
-    
-    pub fn add(&mut self, http_header_fields: Option<HashMap<String, String>>) -> &HashMap<String, String> {
-        match http_header_fields {
-            Some(headers) => {
-                if headers.is_empty() {
-                    &self.http_header_fields
-                } else {
-                    let orign_header = self.http_header_fields_mut();
-                    for (k, v) in headers {
-                        orign_header.insert(k, v);
-                    }
-                    &self.http_header_fields
-                }
-            },
-            None => &self.http_header_fields
-        }
-    }
-    pub fn replacing(&self, task: crate::task::Task) -> Endpoint {
+    pub fn replacing(&self, task: Task) -> Endpoint {
         Endpoint::new(self.url.clone(),self.sample_response_closure.clone(),self.method.clone(),task,self.http_header_fields.clone())
     }
 
-    pub fn into_clent(&self) -> reqwest::Client {
+    fn adding(&mut self, new_http_header_fields: Option<HashMap<String, String>>)  {
+        match new_http_header_fields {
+            Some(headers) => {
+                if !headers.is_empty() {
+                    match self.http_header_fields.as_mut() {
+                        Some(header_mut_ref) => {
+                            for (k, v) in headers {
+                                header_mut_ref.insert(k, v);
+                            }
+                        }
+                        None => {}
+                    }
+                }
+            },
+            None => {}
+        }
+    }
 
-         // let parse_r = Url::parse(self.url.as_str());
-         let url = match Url::parse(self.url.as_str()) {
+    pub fn urlRequest(&self) -> reqwest::RequestBuilder {
+        let url = match Url::parse(self.url.as_str()) {
             Ok(url)  => url,
             Err(e) => panic!("{}",MoyaError::RequestMapping(self.url.as_str())),
         };
-
         let client = reqwest::Client::new();
-        let requestBuilder = client.request(self.method.clone(), url);
+        let requestBuilder= client.request(self.method.clone(), url);
 
         match &self.task {
             Task::RequestPlain => {
-                client
+                requestBuilder
             },
-            Task::RequestData(byte_m) => {
-                requestBuilder.body(byte_m.clone());
-                client
+            Task::RequestData(data) => {
+                requestBuilder.body(data.clone())
             },
-            Task::RequestJSONEncodable(json_str) => {
-                requestBuilder.json(json_str);
-                client
+            Task::RequestJSONEncodable(encodable) => {
+                requestBuilder.json(encodable)
             }
-            _ => client
+            _ => requestBuilder
         }
     }
 }

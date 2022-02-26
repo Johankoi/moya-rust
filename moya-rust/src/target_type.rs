@@ -1,8 +1,6 @@
-// https://www.cnblogs.com/praying/p/13969181.html
-
-use std::collections::HashMap;  
-use crate::task; 
-use crate::validation_type; 
+use std::collections::HashMap;
+use crate::task;
+use crate::validation_type;
 use reqwest::Method;
 
 pub trait TargetType {
@@ -12,7 +10,9 @@ pub trait TargetType {
 
     fn method(&self) -> Method;
 
-    fn sample_data(&self) -> Vec<u8>;
+    fn sample_data(&self) -> Vec<u8> {
+        Vec::new()
+    }
 
     fn task(&self) -> task::Task;
 
