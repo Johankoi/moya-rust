@@ -1,21 +1,22 @@
 use std::fmt;
 use std::error::Error;
-use crate::respones::Response;
+use crate::moya_respones::MoyaResponse;
+
 
 pub enum MoyaError<'a> {
-    ImageMapping(&'a Response),
-    JsonMapping(&'a Response),
-    StringMapping(&'a Response),
-    ObjectMapping(Box<dyn Error>, &'a Response),
+    ImageMapping(&'a MoyaResponse),
+    JsonMapping(&'a MoyaResponse),
+    StringMapping(&'a MoyaResponse),
+    ObjectMapping(Box<dyn Error>, &'a MoyaResponse),
     EncodableMapping(Box<dyn Error>),
-    StatusCode(&'a Response),
-    Underlying(Box<dyn Error>, Option<&'a Response>),
+    StatusCode(&'a MoyaResponse),
+    Underlying(Box<dyn Error>, Option<&'a MoyaResponse>),
     RequestMapping(&'a str),
     ParameterEncoding(Box<dyn Error>),
 }
 
 impl<'a> MoyaError<'a> {
-    pub fn response(&self) -> Option<&Response> {
+    pub fn response(&self) -> Option<&MoyaResponse> {
         match *self {
             MoyaError::ImageMapping(resp) => Some(resp),  
             MoyaError::JsonMapping(resp) => Some(resp), 

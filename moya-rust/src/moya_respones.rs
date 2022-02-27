@@ -1,31 +1,26 @@
 use std::fmt;
 use std::string::String;
 use std::ops::RangeBounds;
-
-use serde::ser;
-use serde::de;
+use serde::{ser, de};
 use serde_json::{Value, Map};
-
+use reqwest::{Request, Response};
 use crate::moya_error::MoyaError;
 
-use reqwest::Request;
-use reqwest::Response as AlsaResponse;
-
-pub struct Response {
+pub struct MoyaResponse {
     status_code: u16,
     data: Vec<u8>,
-    request: Option<http::request::Request<()>>,
-    response: Option<http::response::Response<()>>
+    request: Option<Request>,
+    response: Option<Response>
 }
 
-impl Response {
+impl MoyaResponse {
     pub fn new(
         status_code: u16,
         data: Vec<u8>,
-        request: Option<http::request::Request<()>>,
-        response: Option<http::response::Response<()>>) 
+        request: Option<Request>,
+        response: Option<Response>)
         -> Self {
-            Response {
+        MoyaResponse {
                 status_code,
                 data,
                 request,
@@ -33,7 +28,7 @@ impl Response {
             }
     }
 
-    pub fn filter<R>(&self, status_codes: R) -> &Response
+    pub fn filter<R>(&self, status_codes: R) -> &MoyaResponse
         where R: RangeBounds<u16>
     {
         if !status_codes.contains(&self.status_code) {
@@ -42,14 +37,14 @@ impl Response {
         self
     }
 
-    pub fn filter_status_code(&self, status_code: u16) -> &Response {
+    pub fn filter_status_code(&self, status_code: u16) -> &MoyaResponse {
         self.filter(status_code..status_code)
     }
 
-    pub fn filter_successfully_status_codes(&self) -> &Response {
+    pub fn filter_successfully_status_codes(&self) -> &MoyaResponse {
         self.filter(200..299)
     }
-    pub fn filter_successfully_and_redirect_codes(&self) -> &Response {
+    pub fn filter_successfully_and_redirect_codes(&self) -> &MoyaResponse {
         self.filter(200..399)
     }
 
@@ -77,14 +72,14 @@ impl Response {
     }
 }
 
-impl fmt::Display for Response {
+impl fmt::Display for MoyaResponse {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "Status Code: {}, Data Length:: {}", self.status_code, self.data.len())
     }
 }
 
-impl PartialEq for Response {
-    fn eq(&self, other: &Response) -> bool {
+impl PartialEq for MoyaResponse {
+    fn eq(&self, other: &MoyaResponse) -> bool {
         self.status_code == other.status_code
             && self.data == other.data
             // && self.response == other.response

@@ -2,15 +2,14 @@ use std::error::Error;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::collections::hash_map::DefaultHasher;
-use url::{Url, Host, Position};
-use crate::moya_error::MoyaError;
+use url::Url;
+use super::moya_error::MoyaError;
 use super::task::Task;
-use reqwest::RequestBuilder;
-type Data = bytes::BytesMut;
+use reqwest::{RequestBuilder, Response};
 
 pub enum EndpointSampleResponse {
-    NetworkResponse(u16, Data),
-    Response(http::response::Response<()>, Data),
+    NetworkResponse(u16, bytes::BytesMut),
+    Response(Response, bytes::BytesMut),
     NetworkError(Box<dyn Error>),
 }
 
@@ -43,7 +42,7 @@ impl Endpoint {
         Endpoint::new(self.url.clone(),self.sample_response_closure.clone(),self.method.clone(),task,self.http_header_fields.clone())
     }
 
-    fn adding(&mut self, new_http_header_fields: Option<HashMap<String, String>>)  {
+    pub fn adding(&mut self, new_http_header_fields: Option<HashMap<String, String>>)  {
         match new_http_header_fields {
             Some(headers) => {
                 if !headers.is_empty() {
@@ -68,7 +67,6 @@ impl Endpoint {
         };
         let client = reqwest::Client::new();
         let requestBuilder= client.request(self.method.clone(), url);
-
         match &self.task {
             Task::RequestPlain => {
                 requestBuilder
@@ -78,6 +76,16 @@ impl Endpoint {
             },
             Task::RequestJSONEncodable(encodable) => {
                 requestBuilder.json(encodable)
+            },
+            Task::RequestParameters {parameters, encoding} => {
+                requestBuilder.form(parameters)
+            },
+            Task::RequestCompositeData {body_data, url_parameters} => {
+                requestBuilder.query(url_parameters).body(body_data.clone())
+            },
+            Task::RequestCompositeParameters {body_parameters, body_encoding,
+                url_parameters} => {
+                requestBuilder.query(url_parameters).form(body_parameters)
             }
             _ => requestBuilder
         }
@@ -87,17 +95,28 @@ impl Endpoint {
 
 impl Hash for Endpoint {
     fn hash<H: Hasher>(&self, state: &mut H) {
+        match &self.task {
+            Task::UploadFile(url) => {
+                url.hash(state);
+            }
+            _ => {}
+        }
         self.url.hash(state);
-        // self.into_clent().hash(state);
+        //self.urlRequest().hash(state);
     }
 }
 
 impl PartialEq for Endpoint {
     fn eq(&self, other: &Endpoint) -> bool {
+        let areEndpointsEqualInAdditionalProperties =
+        match (&self.task, &other.task) {
+            (Task::UploadFile(file1), Task::UploadFile(file2)) => file1 == file2,
+            _ => true
+        };
         let mut lhs_hasher = DefaultHasher::new();
         self.hash(&mut lhs_hasher);
         let mut rhs_hasher = DefaultHasher::new();
         other.hash(&mut lhs_hasher);
-        lhs_hasher.finish() == lhs_hasher.finish()
+        return areEndpointsEqualInAdditionalProperties &&  (lhs_hasher.finish() == lhs_hasher.finish());
     }
 }

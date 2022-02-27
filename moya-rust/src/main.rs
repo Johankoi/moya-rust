@@ -3,11 +3,12 @@ use std::ptr;
 mod moya_error;
 mod validation_type;
 mod task;
-mod respones;
 mod endpoint;
 mod target_type;
 mod moya_provider;
 mod cancellable;
+mod moya_respones;
+
 use std::collections::HashMap;
 
 

@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use super::respones::Response;
+use super::moya_respones::MoyaResponse;
 use super::moya_error::MoyaError;
 use super::target_type::TargetType;
 use super::cancellable::*;
@@ -11,7 +11,7 @@ type Progress = f32;
 type Session = reqwest::Client;
 
 /// Closure to be executed when a request has completed.
-type Completion = (dyn for<'r> Fn(Result<Response, MoyaError>) + 'static);
+type Completion = dyn Fn(Result<MoyaResponse, MoyaError>);
 
 type EndpointClosure<T> = dyn Fn(T) -> Endpoint;
 type Request = http::request::Request<()>;
@@ -20,7 +20,7 @@ type RequestClosure = dyn Fn(Endpoint, RequestResultClosure);
 
 
 pub struct ProgressResponse {
-    response: Option<Response>,
+    response: Option<MoyaResponse>,
     progress_object: Progress
 }
 
