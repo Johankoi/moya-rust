@@ -10,9 +10,7 @@ pub trait TargetType {
 
     fn method(&self) -> Method;
 
-    fn sample_data(&self) -> Vec<u8> {
-        Vec::new()
-    }
+    fn sample_data(&self) -> bytes::BytesMut;
 
     fn task(&self) -> task::Task;
 
@@ -22,5 +20,5 @@ pub trait TargetType {
     }
 
     // The headers to be used in the request.
-    fn headers(&self) -> HashMap<String, String>;
+    fn headers(&self) -> Option<HashMap<String, String>>;
 }

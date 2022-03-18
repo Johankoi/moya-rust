@@ -1,3 +1,4 @@
+use std::borrow::{Borrow, BorrowMut};
 use std::error::Error;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
@@ -5,7 +6,7 @@ use std::collections::hash_map::DefaultHasher;
 use url::Url;
 use super::moya_error::MoyaError;
 use super::task::Task;
-use reqwest::{RequestBuilder, Response};
+use reqwest::{Method, RequestBuilder, Response};
 
 pub enum EndpointSampleResponse {
     NetworkResponse(u16, bytes::BytesMut),
@@ -13,18 +14,18 @@ pub enum EndpointSampleResponse {
     NetworkError(Box<dyn Error>),
 }
 
-pub struct Endpoint {
-    url: String,
-    sample_response_closure: fn() -> EndpointSampleResponse,
-    method: http::Method,
-    task: Task,
-    http_header_fields: Option<HashMap<String, String>>,
+pub struct Endpoint  {
+    pub(crate) url: String,
+    pub(crate) sample_response_closure: Box<dyn Fn() -> EndpointSampleResponse>,
+    pub(crate) method: Method,
+    pub(crate) task: Task,
+    pub(crate) http_header_fields: Option<HashMap<String, String>>,
 }
 
 impl Endpoint {
    pub fn new(
         url: String,
-        sample_response_closure: fn() -> EndpointSampleResponse,
+        sample_response_closure: Box<dyn Fn() -> EndpointSampleResponse>,
         method: http::Method,
         task: Task,
         http_header_fields: Option<HashMap<String, String>>,
@@ -38,9 +39,11 @@ impl Endpoint {
         }
     }
 
-    pub fn replacing(&self, task: Task) -> Endpoint {
-        Endpoint::new(self.url.clone(),self.sample_response_closure.clone(),self.method.clone(),task,self.http_header_fields.clone())
-    }
+    // pub fn replacing(self, task: Task) -> Endpoint {
+    //
+    //     let ss= self.sample_response_closure;
+    //     Endpoint::new(self.url.clone(),Box::new( &self.sample_response_closure),self.method.clone(),task,self.http_header_fields.clone())
+    // }
 
     pub fn adding(&mut self, new_http_header_fields: Option<HashMap<String, String>>)  {
         match new_http_header_fields {

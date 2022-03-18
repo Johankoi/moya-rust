@@ -8,6 +8,7 @@ mod target_type;
 mod moya_provider;
 mod cancellable;
 mod moya_respones;
+mod moya_provider_defaults;
 
 use std::collections::HashMap;
 

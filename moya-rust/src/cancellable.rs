@@ -22,8 +22,6 @@ impl Cancellable for CancellableWrapper {
     }
 }
 
-
-
 pub struct SimpleCancellable {
     is_cancelled: bool
 }
